@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+  }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: radial-gradient(circle at 50% 20%, #151c2c 0%, #0a0e17 100%);
+    color: #f1f5f9;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+}
+
+/* Custom Radar Keyframes */
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes radar-scan {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.animate-radar-pulse-delayed {
+  animation: radar-pulse 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  animation-delay: 1.5s;
+}
+
+.animate-radar-scan {
+  animation: radar-scan 8s linear infinite;
+}
+
+.animate-float {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+/* Glassmorphism utility classes */
+.glass-panel {
+  background: rgba(26, 32, 48, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(38, 48, 72, 0.8);
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+}
