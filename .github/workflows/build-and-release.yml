@@ -34,15 +34,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore NuGet Packages
-        run: dotnet restore AirDropWindows.csproj
-
-      - name: Build Application (Release)
-        run: dotnet build AirDropWindows.csproj -c Release --no-restore
-
-      - name: Publish Framework-Dependent (win-x64)
-        run: |
-          dotnet publish AirDropWindows.csproj -c Release -r win-x64 --no-build -o ./publish
+      - name: Publish Application (Release win-x64)
+        run: dotnet publish AirDropWindows.csproj -c Release -r win-x64 --self-contained false -o ./publish
 
       - name: Compress Build Artifact
         shell: pwsh
