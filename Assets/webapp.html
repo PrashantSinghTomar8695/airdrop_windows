@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AirDrop Windows</title>
+    <style>
+        :root {
+            --primary: #0A84FF;
+            --primary-hover: #0071E3;
+            --bg-color: #000000;
+            --card-bg: rgba(28, 28, 30, 0.85);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --text-main: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --success: #30D158;
+            --danger: #FF453A;
+            --glass: blur(25px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 24px) 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 6px 6px 6px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0A84FF, #5E5CE6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+        }
+
+        .brand-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: #FFFFFF;
+        }
+
+        .brand-title {
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .badge-live {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--success);
+            background: rgba(48, 209, 88, 0.15);
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(48, 209, 88, 0.3);
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Segmented Navigation */
+        .segment-control {
+            display: flex;
+            background: rgba(118, 118, 128, 0.24);
+            border-radius: 12px;
+            padding: 3px;
+            position: relative;
+        }
+
+        .segment-btn {
+            flex: 1;
+            padding: 9px 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 9px;
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+        }
+
+        .segment-btn.active {
+            color: #FFFFFF;
+            background: rgba(99, 99, 102, 0.65);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--glass);
+            -webkit-backdrop-filter: var(--glass);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Tab Content */
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
+        /* Upload Zone */
+        .dropzone {
+            border: 2px dashed rgba(10, 132, 255, 0.5);
+            border-radius: 16px;
+            padding: 36px 16px;
+            text-align: center;
+            background: rgba(10, 132, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .dropzone:active {
+            background: rgba(10, 132, 255, 0.12);
+            transform: scale(0.99);
+        }
+
+        .dropzone-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 12px auto;
+            border-radius: 50%;
+            background: rgba(10, 132, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--primary);
+        }
+
+        .dropzone-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .dropzone-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Selected Files Queue */
+        .queue-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .file-ext-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 7px;
+            border-radius: 6px;
+            background: var(--primary);
+            color: #FFFFFF;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 190px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 20px;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(10, 132, 255, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .btn-primary:disabled {
+            background: rgba(142, 142, 147, 0.3);
+            box-shadow: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* Progress Card */
+        .progress-box {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(10, 132, 255, 0.1);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .progress-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0A84FF, #30D158);
+            border-radius: 4px;
+            transition: width 0.15s ease;
+        }
+
+        /* Download List */
+        .download-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .btn-download {
+            background: rgba(10, 132, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid rgba(10, 132, 255, 0.4);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 9px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .btn-download:active {
+            background: var(--primary);
+            color: #FFFFFF;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 24px) + 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(48, 209, 88, 0.95);
+            color: #000;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-5H8l4-4 4 4h-3v5h-2z"/></svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">AirDrop</h1>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Direct Wi-Fi Transfer</div>
+                </div>
+            </div>
+            <div class="badge-live">
+                <span class="badge-dot"></span>
+                <span>Hotspot</span>
+            </div>
+        </header>
+
+        <!-- Tab Switcher -->
+        <nav class="segment-control">
+            <button class="segment-btn active" id="btnTabUpload" onclick="switchTab('upload')">Send to PC</button>
+            <button class="segment-btn" id="btnTabDownload" onclick="switchTab('download')">Download from PC</button>
+        </nav>
+
+        <!-- Tab 1: Upload (iPhone -> PC) -->
+        <section class="tab-panel active" id="tabUpload">
+            <div class="glass-card">
+                <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                    </div>
+                    <div class="dropzone-title">Tap to select Photos or Files</div>
+                    <div class="dropzone-sub">Select multiple photos, 4K videos, or docs</div>
+                </div>
+                <input type="file" id="fileInput" multiple onchange="onFilesSelected(event)">
+
+                <!-- Progress Bar -->
+                <div class="progress-box" id="progressBox" style="margin-top: 16px;">
+                    <div class="progress-top">
+                        <span id="progressLabel">Uploading...</span>
+                        <span id="progressSpeed">0 MB/s</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBarFill"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                        <span id="progressCount">1 of 1</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Files List -->
+            <div class="glass-card" id="selectedFilesCard" style="display: none;">
+                <div class="queue-title">Selected Files (<span id="queueCount">0</span>)</div>
+                <div class="file-list" id="fileList"></div>
+                <button class="btn-primary" id="btnUpload" style="margin-top: 14px;" onclick="uploadSelectedFiles()">
+                    <svg style="width: 20px; height: 20px; fill: currentColor;" viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                    <span>Send to Windows PC</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 2: Download (PC -> iPhone) -->
+        <section class="tab-panel" id="tabDownload">
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div class="queue-title" style="margin-bottom: 0;">Shared on PC</div>
+                    <button onclick="fetchSharedFiles()" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer;">Refresh</button>
+                </div>
+                <div class="file-list" id="sharedFileList">
+                    <div class="empty-state">No files staged on PC yet. Drag files into the PC app to download them here!</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">Upload complete!</div>
+
+    <script>
+        let selectedFiles = [];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            if (tab === 'upload') {
+                document.getElementById('btnTabUpload').classList.add('active');
+                document.getElementById('tabUpload').classList.add('active');
+            } else {
+                document.getElementById('btnTabDownload').classList.add('active');
+                document.getElementById('tabDownload').classList.add('active');
+                fetchSharedFiles();
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function onFilesSelected(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            selectedFiles = Array.from(files);
+            renderSelectedQueue();
+        }
+
+        function renderSelectedQueue() {
+            const card = document.getElementById('selectedFilesCard');
+            const list = document.getElementById('fileList');
+            const count = document.getElementById('queueCount');
+
+            if (selectedFiles.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'flex';
+            count.innerText = selectedFiles.length;
+            list.innerHTML = '';
+
+            selectedFiles.forEach((file, index) => {
+                const ext = file.name.split('.').pop() || 'FILE';
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-info">
+                        <span class="file-ext-badge">${ext.substring(0, 4)}</span>
+                        <div>
+                            <div class="file-name">${escapeHtml(file.name)}</div>
+                            <div class="file-size">${formatBytes(file.size)}</div>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function uploadSelectedFiles() {
+            if (selectedFiles.length === 0) return;
+
+            const btn = document.getElementById('btnUpload');
+            btn.disabled = true;
+
+            const progressBox = document.getElementById('progressBox');
+            const fill = document.getElementById('progressBarFill');
+            const speedEl = document.getElementById('progressSpeed');
+            const labelEl = document.getElementById('progressLabel');
+            const countEl = document.getElementById('progressCount');
+            const percentEl = document.getElementById('progressPercent');
+
+            progressBox.style.display = 'flex';
+            fill.style.width = '0%';
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+
+            const xhr = new XMLHttpRequest();
+            const startTime = Date.now();
+            let lastLoaded = 0;
+            let lastTime = startTime;
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    fill.style.width = percent + '%';
+                    percentEl.innerText = percent + '%';
+                    labelEl.innerText = `Uploading ${selectedFiles.length} file(s)...`;
+                    countEl.innerText = `${formatBytes(e.loaded)} / ${formatBytes(e.total)}`;
+
+                    const now = Date.now();
+                    const timeDiff = (now - lastTime) / 1000;
+                    if (timeDiff >= 0.5) {
+                        const bytesDiff = e.loaded - lastLoaded;
+                        const speedMbps = (bytesDiff / (1024 * 1024)) / timeDiff;
+                        speedEl.innerText = speedMbps.toFixed(1) + ' MB/s';
+                        lastLoaded = e.loaded;
+                        lastTime = now;
+                    }
+                }
+            };
+
+            xhr.onload = function() {
+                btn.disabled = false;
+                if (xhr.status === 200) {
+                    showToast('Successfully sent to Windows PC!');
+                    selectedFiles = [];
+                    renderSelectedQueue();
+                    setTimeout(() => { progressBox.style.display = 'none'; }, 2000);
+                    document.getElementById('fileInput').value = '';
+                } else {
+                    alert('Upload failed: ' + xhr.responseText);
+                }
+            };
+
+            xhr.onerror = function() {
+                btn.disabled = false;
+                alert('Connection lost. Please make sure iPhone is still connected to the Hotspot.');
+            };
+
+            xhr.open('POST', '/api/upload', true);
+            xhr.send(formData);
+        }
+
+        async function fetchSharedFiles() {
+            const listEl = document.getElementById('sharedFileList');
+            try {
+                const res = await fetch('/api/files');
+                const files = await res.json();
+
+                if (!files || files.length === 0) {
+                    listEl.innerHTML = '<div class="empty-state">No files staged on PC yet. Drag files into the PC app to download them here!</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+                files.forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'download-item';
+                    item.innerHTML = `
+                        <div class="file-info">
+                            <span class="file-ext-badge">${escapeHtml(f.extension.substring(0, 4))}</span>
+                            <div>
+                                <div class="file-name" style="max-width: 170px;">${escapeHtml(f.name)}</div>
+                                <div class="file-size">${escapeHtml(f.formattedSize)}</div>
+                            </div>
+                        </div>
+                        <a href="${f.downloadUrl}" class="btn-download" download="${escapeHtml(f.name)}">
+                            <svg style="width: 16px; height: 16px; fill: currentColor;" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                            <span>Save</span>
+                        </a>
+                    `;
+                    listEl.appendChild(item);
+                });
+            } catch (err) {
+                listEl.innerHTML = '<div class="empty-state" style="color: var(--danger);">Could not connect to PC server.</div>';
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Auto refresh downloads tab periodically if active
+        setInterval(() => {
+            if (document.getElementById('tabDownload').classList.contains('active')) {
+                fetchSharedFiles();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
